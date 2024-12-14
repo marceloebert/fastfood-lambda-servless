@@ -28,17 +28,17 @@ jobs:
         working-directory: Lambda-Authenticator/Lambda-Authenticator
         run: dotnet restore
 
-      - name: Build and package Lambda
-        working-directory: Lambda-Authenticator/Lambda-Authenticator
-        run: dotnet lambda package -c Release -o Lambda-Authenticator.zip
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ env.REGION_DEFAULT }}
+          aws-region: us-east-1
+
+      - name: Build and package Lambda
+        working-directory: Lambda-Authenticator/Lambda-Authenticator
+        run: dotnet lambda package -c Release -o Lambda-Authenticator.zip    
 
       - name: Deploy Lambda to AWS
         working-directory: Lambda-Authenticator/Lambda-Authenticator
