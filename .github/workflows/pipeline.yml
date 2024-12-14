@@ -22,11 +22,10 @@ jobs:
         run: |
           dotnet tool install -g Amazon.Lambda.Tools
           echo "Adding ~/.dotnet/tools to PATH"
-          echo "PATH=\$PATH:\$HOME/.dotnet/tools" >> $GITHUB_ENV
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH # Atualiza o PATH corretamente
 
       - name: Verify Lambda Tools Installation
-        shell: bash
-        run: dotnet-lambda --version # Verifica se a ferramenta foi instalada corretamente
+        run: dotnet-lambda --version
 
       - name: Install dependencies
         working-directory: Lambda-Authenticator/Lambda-Authenticator # Caminho para o diretório do projeto
