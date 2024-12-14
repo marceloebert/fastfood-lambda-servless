@@ -36,8 +36,8 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
-          AWS_REGION: us-east-1 # Altere conforme sua região padrão
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }} # Apenas se usar credenciais temporárias
+          AWS_REGION: us-east-1 # Altere se estiver em outra região
         working-directory: Lambda-Authenticator/Lambda-Authenticator
         run: |
           aws lambda update-function-code \
