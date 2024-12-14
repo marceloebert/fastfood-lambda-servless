@@ -32,15 +32,18 @@ jobs:
         working-directory: Lambda-Authenticator/Lambda-Authenticator
         run: dotnet lambda package -c Release -o Lambda-Authenticator.zip
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # Apenas se necessário
+          region: us-east-1
+
       - name: Deploy Lambda to AWS
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }} # Apenas se usar credenciais temporárias
-          AWS_REGION: us-east-1 # Altere se estiver em outra região
         working-directory: Lambda-Authenticator/Lambda-Authenticator
         run: |
           aws lambda update-function-code \
-            --region $AWS_REGION \
+            --region us-east-1 \
             --function-name CustomAuthorizerLambda \
             --zip-file fileb://Lambda-Authenticator.zip
