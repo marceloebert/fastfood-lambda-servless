@@ -22,14 +22,14 @@ jobs:
         run: |
           dotnet tool install -g Amazon.Lambda.Tools
           echo "Adding ~/.dotnet/tools to PATH"
-          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH # Atualiza o PATH corretamente
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
       - name: Install dependencies
-        working-directory: Lambda-Authenticator/Lambda-Authenticator # Caminho para o diretório do projeto
+        working-directory: Lambda-Authenticator/Lambda-Authenticator
         run: dotnet restore
 
       - name: Build and package Lambda
-        working-directory: Lambda-Authenticator/Lambda-Authenticator # Caminho para o diretório do projeto
+        working-directory: Lambda-Authenticator/Lambda-Authenticator
         run: dotnet lambda package -c Release -o Lambda-Authenticator.zip
 
       - name: Deploy Lambda to AWS
@@ -37,7 +37,10 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
-          AWS_REGION: ${{ env.REGION_DEFAULT }}
-        working-directory: Lambda-Authenticator/Lambda-Authenticator # Caminho para o diretório do projeto
+          AWS_REGION: us-east-1 # Altere conforme sua região padrão
+        working-directory: Lambda-Authenticator/Lambda-Authenticator
         run: |
-          aws lambda update-function-code --function-name CustomAuthorizerLambda --zip-file fileb://Lambda-Authenticator.zip
+          aws lambda update-function-code \
+            --region $AWS_REGION \
+            --function-name CustomAuthorizerLambda \
+            --zip-file fileb://Lambda-Authenticator.zip
