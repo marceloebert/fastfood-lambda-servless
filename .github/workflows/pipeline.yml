@@ -24,9 +24,6 @@ jobs:
           echo "Adding ~/.dotnet/tools to PATH"
           echo "$HOME/.dotnet/tools" >> $GITHUB_PATH # Atualiza o PATH corretamente
 
-      - name: Verify Lambda Tools Installation
-        run: dotnet-lambda --version
-
       - name: Install dependencies
         working-directory: Lambda-Authenticator/Lambda-Authenticator # Caminho para o diretório do projeto
         run: dotnet restore
