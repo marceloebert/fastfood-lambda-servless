@@ -29,7 +29,7 @@ resource "aws_api_gateway_authorizer" "custom_authorizer" {
   type                             = "REQUEST"
 }
 
-# Proxy Integration (EKS)
+# Proxy Integration (Protegido)
 resource "aws_api_gateway_resource" "proxy" {
   rest_api_id = aws_api_gateway_rest_api.fastfood_api.id
   parent_id   = aws_api_gateway_rest_api.fastfood_api.root_resource_id
@@ -48,7 +48,6 @@ resource "aws_api_gateway_method" "proxy_method" {
   }
 }
 
-
 resource "aws_api_gateway_integration" "proxy_integration" {
   rest_api_id             = aws_api_gateway_rest_api.fastfood_api.id
   resource_id             = aws_api_gateway_resource.proxy.id
@@ -64,12 +63,52 @@ resource "aws_api_gateway_integration" "proxy_integration" {
   passthrough_behavior = "WHEN_NO_MATCH"
 }
 
+# Rota Pública: /public/{proxy+}
+resource "aws_api_gateway_resource" "public_proxy" {
+  rest_api_id = aws_api_gateway_rest_api.fastfood_api.id
+  parent_id   = aws_api_gateway_rest_api.fastfood_api.root_resource_id
+  path_part   = "public"
+}
 
+resource "aws_api_gateway_resource" "public_proxy_child" {
+  rest_api_id = aws_api_gateway_rest_api.fastfood_api.id
+  parent_id   = aws_api_gateway_resource.public_proxy.id
+  path_part   = "{proxy+}"
+}
+
+resource "aws_api_gateway_method" "public_proxy_method" {
+  rest_api_id   = aws_api_gateway_rest_api.fastfood_api.id
+  resource_id   = aws_api_gateway_resource.public_proxy_child.id
+  http_method   = "ANY"
+  authorization = "NONE" # Sem autorização
+
+  request_parameters = {
+    "method.request.path.proxy" = true
+  }
+}
+
+resource "aws_api_gateway_integration" "public_proxy_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.fastfood_api.id
+  resource_id             = aws_api_gateway_resource.public_proxy_child.id
+  http_method             = aws_api_gateway_method.public_proxy_method.http_method
+  integration_http_method = "ANY"
+  uri                     = "${var.eks_service_endpoint}/{proxy}"
+  type                    = "HTTP_PROXY"
+
+  request_parameters = {
+    "integration.request.path.proxy" = "method.request.path.proxy"
+  }
+
+  passthrough_behavior = "WHEN_NO_MATCH"
+}
 
 # Deployment
 resource "aws_api_gateway_deployment" "api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.fastfood_api.id
-  depends_on  = [aws_api_gateway_method.proxy_method]
+  depends_on  = [
+    aws_api_gateway_method.proxy_method,
+    aws_api_gateway_method.public_proxy_method
+  ]
 }
 
 # Stage
@@ -87,4 +126,3 @@ resource "aws_lambda_permission" "allow_api_gateway" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "arn:aws:execute-api:${var.region}:${var.account_id}:${aws_api_gateway_rest_api.fastfood_api.id}/*"
 }
-
