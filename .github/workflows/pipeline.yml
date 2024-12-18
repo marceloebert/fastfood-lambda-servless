@@ -1,4 +1,4 @@
-name: Build and Deploy Lambda
+name: Build and Deploy Lambda and Terraform
 
 on:
   push:
@@ -15,6 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Configuração do .NET Core
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v3
         with:
@@ -30,6 +31,7 @@ jobs:
         working-directory: Lambda-Authenticator/Lambda-Authenticator
         run: dotnet restore
 
+      # Configura credenciais AWS
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -38,6 +40,7 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
+      # Build e Deploy da Lambda
       - name: Build and package Lambda
         working-directory: Lambda-Authenticator/Lambda-Authenticator
         run: dotnet lambda package -c Release -o Lambda-Authenticator.zip    
@@ -49,3 +52,25 @@ jobs:
             --region us-east-1 \
             --function-name CustomAuthorizerLambda \
             --zip-file fileb://Lambda-Authenticator.zip
+
+      # Terraform: Instalação e execução
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: '1.8.0'
+
+      - name: Terraform Init
+        working-directory: api-gateway
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: api-gateway
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: api-gateway
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        working-directory: api-gateway
+        run: terraform apply -auto-approve tfplan
